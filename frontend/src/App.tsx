@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Login from './pages/Login.js';
 import JobBoard from './pages/JobBoard.js';
 import { api } from './api/client.js';
 
+interface UserData {
+  id: number;
+  name: string;
+  email: string;
+  role: 'employer' | 'candidate';
+}
+
 function App() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // In production, use httpOnly cookies instead of localStorage for the token
     const token = localStorage.getItem('token');
     const saved = localStorage.getItem('user');
     if (token && saved) {
@@ -17,7 +25,8 @@ function App() {
     setLoading(false);
   }, []);
 
-  const handleLogin = (token: string, user: any) => {
+  const handleLogin = (token: string, user: UserData) => {
+    // In production, the server should set an httpOnly cookie instead
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;

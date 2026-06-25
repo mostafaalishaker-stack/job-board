@@ -1,6 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { authMiddleware, employerMiddleware } from './auth.js';
 
+function sanitize(str: string): string {
+  return str.replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;' }[c] || c));
+}
+
 interface Job {
   id: number;
   title: string;
@@ -14,6 +18,7 @@ interface Job {
   createdAt: string;
 }
 
+// In-memory job store (resets on server restart — no database required)
 const jobs: Job[] = [];
 let nextId = 1;
 
@@ -56,14 +61,14 @@ router.post('/', authMiddleware, employerMiddleware, (req: Request, res: Respons
   }
   const job: Job = {
     id: nextId++,
-    title,
-    company,
-    location,
+    title: sanitize(title),
+    company: sanitize(company),
+    location: sanitize(location),
     type,
-    salary,
-    description,
-    requirements: requirements || [],
-    postedBy: (req as any).user.id,
+    salary: sanitize(salary),
+    description: sanitize(description),
+    requirements: (requirements || []).map((r: string) => sanitize(r)),
+    postedBy: req.user!.id,
     createdAt: new Date().toISOString(),
   };
   jobs.push(job);
@@ -76,18 +81,18 @@ router.put('/:id', authMiddleware, employerMiddleware, (req: Request, res: Respo
     res.status(404).json({ error: 'Job not found' });
     return;
   }
-  if (jobs[idx].postedBy !== (req as any).user.id) {
+  if (jobs[idx].postedBy !== req.user!.id) {
     res.status(403).json({ error: 'Not your job listing' });
     return;
   }
   const { title, company, location, type, salary, description, requirements } = req.body;
-  if (title) jobs[idx].title = title;
-  if (company) jobs[idx].company = company;
-  if (location) jobs[idx].location = location;
+  if (title) jobs[idx].title = sanitize(title);
+  if (company) jobs[idx].company = sanitize(company);
+  if (location) jobs[idx].location = sanitize(location);
   if (type && ['remote', 'onsite', 'hybrid'].includes(type)) jobs[idx].type = type;
-  if (salary) jobs[idx].salary = salary;
-  if (description) jobs[idx].description = description;
-  if (requirements) jobs[idx].requirements = requirements;
+  if (salary) jobs[idx].salary = sanitize(salary);
+  if (description) jobs[idx].description = sanitize(description);
+  if (requirements) jobs[idx].requirements = (requirements as string[]).map((r: string) => sanitize(r));
   res.json(jobs[idx]);
 });
 
@@ -97,7 +102,7 @@ router.delete('/:id', authMiddleware, employerMiddleware, (req: Request, res: Re
     res.status(404).json({ error: 'Job not found' });
     return;
   }
-  if (jobs[idx].postedBy !== (req as any).user.id) {
+  if (jobs[idx].postedBy !== req.user!.id) {
     res.status(403).json({ error: 'Not your job listing' });
     return;
   }

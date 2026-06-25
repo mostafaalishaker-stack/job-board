@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '../api/client.js';
 
 interface Job {
@@ -54,12 +54,14 @@ export default function JobBoard({ user, onLogout }: Props) {
 
   const fetchJobs = useCallback(async () => {
     try {
-      const params: any = {};
+      const params: Record<string, string> = {};
       if (search) params.search = search;
       if (typeFilter !== 'all') params.type = typeFilter;
       const res = await api.get('/api/jobs', { params });
       setJobs(res.data);
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error('Failed to fetch jobs', err);
+    }
   }, [search, typeFilter]);
 
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
@@ -73,7 +75,9 @@ export default function JobBoard({ user, onLogout }: Props) {
       try {
         const res = await api.get(`/api/applications/${job.id}`);
         setApplications(res.data);
-      } catch { /* ignore */ }
+      } catch (err) {
+        console.error('Failed to fetch applications', err);
+      }
     }
   };
 
@@ -84,8 +88,11 @@ export default function JobBoard({ user, onLogout }: Props) {
       await api.post(`/api/applications/${selectedJob.id}/apply`, { coverLetter });
       setAppMsg('Application submitted successfully!');
       setCoverLetter('');
-    } catch (err: any) {
-      setAppError(err.response?.data?.error || 'Failed to apply');
+    } catch (err) {
+      const msg = err && typeof err === 'object' && 'response' in err
+        ? (err as { response: { data: { error?: string } } }).response?.data?.error
+        : 'Failed to apply';
+      setAppError(msg || 'Failed to apply');
     }
   };
 
@@ -99,7 +106,9 @@ export default function JobBoard({ user, onLogout }: Props) {
       setJobs(prev => [res.data, ...prev]);
       setShowPostForm(false);
       setForm({ title: '', company: '', location: '', type: 'remote', salary: '', description: '', requirements: '' });
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error('Failed to post job', err);
+    }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -192,17 +201,24 @@ export default function JobBoard({ user, onLogout }: Props) {
           <div>
             <h2 style={{ marginBottom: '20px' }}>Post a New Job</h2>
             <form onSubmit={handlePostJob} style={{ maxWidth: '600px' }}>
-              <input style={inputStyle} placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
-              <input style={inputStyle} placeholder="Company" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} required />
-              <input style={inputStyle} placeholder="Location" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} required />
-              <select style={inputStyle} value={form.type} onChange={e => setForm({ ...form, type: e.target.value as Job['type'] })}>
+              <label htmlFor="job-title" style={{ display: 'block', marginBottom: '4px', color: '#94a3b8', fontSize: '13px' }}>Title</label>
+              <input id="job-title" style={inputStyle} placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
+              <label htmlFor="job-company" style={{ display: 'block', marginBottom: '4px', color: '#94a3b8', fontSize: '13px' }}>Company</label>
+              <input id="job-company" style={inputStyle} placeholder="Company" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} required />
+              <label htmlFor="job-location" style={{ display: 'block', marginBottom: '4px', color: '#94a3b8', fontSize: '13px' }}>Location</label>
+              <input id="job-location" style={inputStyle} placeholder="Location" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} required />
+              <label htmlFor="job-type" style={{ display: 'block', marginBottom: '4px', color: '#94a3b8', fontSize: '13px' }}>Work Type</label>
+              <select id="job-type" style={inputStyle} value={form.type} onChange={e => setForm({ ...form, type: e.target.value as Job['type'] })}>
                 <option value="remote">Remote</option>
                 <option value="onsite">Onsite</option>
                 <option value="hybrid">Hybrid</option>
               </select>
-              <input style={inputStyle} placeholder="Salary" value={form.salary} onChange={e => setForm({ ...form, salary: e.target.value })} required />
-              <textarea style={{ ...inputStyle, minHeight: '80px' }} placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required />
-              <input style={inputStyle} placeholder="Requirements (comma separated)" value={form.requirements} onChange={e => setForm({ ...form, requirements: e.target.value })} />
+              <label htmlFor="job-salary" style={{ display: 'block', marginBottom: '4px', color: '#94a3b8', fontSize: '13px' }}>Salary</label>
+              <input id="job-salary" style={inputStyle} placeholder="Salary" value={form.salary} onChange={e => setForm({ ...form, salary: e.target.value })} required />
+              <label htmlFor="job-desc" style={{ display: 'block', marginBottom: '4px', color: '#94a3b8', fontSize: '13px' }}>Description</label>
+              <textarea id="job-desc" style={{ ...inputStyle, minHeight: '80px' }} placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required />
+              <label htmlFor="job-reqs" style={{ display: 'block', marginBottom: '4px', color: '#94a3b8', fontSize: '13px' }}>Requirements (comma separated)</label>
+              <input id="job-reqs" style={inputStyle} placeholder="Requirements (comma separated)" value={form.requirements} onChange={e => setForm({ ...form, requirements: e.target.value })} />
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" style={{ ...btn, background: 'linear-gradient(135deg,#3b82f6,#06b6d4)', color: '#fff' }}>Post Job</button>
                 <button type="button" onClick={() => setShowPostForm(false)} style={{ ...btn, background: '#1e293b', color: '#fff' }}>Cancel</button>
@@ -244,7 +260,9 @@ export default function JobBoard({ user, onLogout }: Props) {
                       </button>
                     ) : (
                       <div>
+                        <label htmlFor="cover-letter" style={{ display: 'block', marginBottom: '4px', color: '#94a3b8', fontSize: '13px' }}>Cover Letter (optional)</label>
                         <textarea
+                          id="cover-letter"
                           style={{ ...inputStyle, minHeight: '100px' }}
                           placeholder="Cover letter (optional)"
                           value={coverLetter}

@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { api } from '../api/client.js';
 
+interface UserData {
+  id: number;
+  name: string;
+  email: string;
+  role: 'employer' | 'candidate';
+}
+
 interface Props {
-  onLogin: (token: string, user: any) => void;
+  onLogin: (token: string, user: UserData) => void;
 }
 
 export default function Login({ onLogin }: Props) {
@@ -18,13 +25,16 @@ export default function Login({ onLogin }: Props) {
     setError('');
     try {
       const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
-      const body: any = { email, password };
+      const body: Record<string, unknown> = { email, password };
       if (isRegister) body.name = name;
       if (isRegister) body.role = role;
       const res = await api.post(endpoint, body);
       onLogin(res.data.token, res.data.user);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Something went wrong');
+    } catch (err) {
+      const msg = err && typeof err === 'object' && 'response' in err
+        ? (err as { response: { data: { error?: string } } }).response?.data?.error
+        : 'Something went wrong';
+      setError(msg || 'Something went wrong');
     }
   };
 
@@ -53,16 +63,16 @@ export default function Login({ onLogin }: Props) {
         <form onSubmit={handleSubmit}>
           {isRegister && (
             <>
-              <label style={labelStyle}>Name</label>
-              <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="Your name" required />
+              <label htmlFor="reg-name" style={labelStyle}>Name</label>
+              <input id="reg-name" style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="Your name" required />
             </>
           )}
-          <label style={labelStyle}>Email</label>
-          <input style={inputStyle} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" required />
-          <label style={labelStyle}>Password</label>
-          <input style={inputStyle} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required />
+          <label htmlFor="reg-email" style={labelStyle}>Email</label>
+          <input id="reg-email" style={inputStyle} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" required />
+          <label htmlFor="reg-password" style={labelStyle}>Password</label>
+          <input id="reg-password" style={inputStyle} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required />
           {isRegister && (
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '16px' }} role="radiogroup" aria-label="Role">
               <label style={labelStyle}>Role</label>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>

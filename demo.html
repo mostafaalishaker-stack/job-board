@@ -2,12 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <meta name="description" content="Interactive demo of Job Board Platform featuring job search, filters, and application management. React + Express portfolio project.">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Job Board Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Inter', sans-serif; background: #0b1120; color: #e2e8f0; min-height: 100vh; }
@@ -51,7 +54,7 @@ nav { background: #131c31; border-bottom: 1px solid #1e293b; padding: 0 24px; he
 .detail-panel { background: #131c31; border: 1px solid #1e293b; border-radius: 12px; padding: 28px; min-height: 400px; }
 .detail-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #475569; }
 .detail-placeholder i { font-size: 48px; margin-bottom: 16px; }
-.detail-placeholder p { font-size: 15px; }
+.detail-placeholder p { font-size: 15px; color: #94a3b8; }
 .company-logo { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg,#3b82f6,#8b5cf6); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
 .company-logo i { font-size: 28px; color: #fff; }
 .detail-title { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
@@ -87,7 +90,7 @@ nav { background: #131c31; border-bottom: 1px solid #1e293b; padding: 0 24px; he
 </head>
 <body>
 
-<a class="back-link" href="#"><i class="fas fa-arrow-left"></i> Back to Project</a>
+<a class="back-link" href="../index.html"><i class="fas fa-arrow-left"></i> Back to Portfolio</a>
 
 <nav>
   <div class="nav-left">
@@ -144,8 +147,8 @@ nav { background: #131c31; border-bottom: 1px solid #1e293b; padding: 0 24px; he
       <textarea id="applyCover" placeholder="Why you're a good fit..."></textarea>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="submitApplication()">Submit Application</button>
+      <button class="btn btn-secondary" onclick="closeModal()" type="button">Cancel</button>
+      <button class="btn btn-primary" onclick="submitApplication()" type="button">Submit Application</button>
     </div>
   </div>
 </div>
@@ -186,7 +189,7 @@ function renderJobList() {
     return true;
   });
   list.innerHTML = filtered.map(j => `
-    <div class="job-card${selectedJob && selectedJob.id === j.id ? ' active' : ''}" data-id="${j.id}" onclick="selectJob(${j.id})">
+    <div class="job-card${selectedJob && selectedJob.id === j.id ? ' active' : ''}" data-id="${j.id}" tabindex="0" role="button" onclick="selectJob(${j.id})" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); selectJob(${j.id}); }">
       <h3>${j.title}</h3>
       <div class="company">${j.company}</div>
       <div class="meta">

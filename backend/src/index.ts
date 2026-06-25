@@ -1,19 +1,30 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 import authRouter from './routes/auth.js';
 import jobsRouter from './routes/jobs.js';
 import applicationsRouter from './routes/applications.js';
 
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 5003;
 
-app.use(cors());
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+});
+
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? ['https://mostafaali.dev'] : '*',
+}));
 app.use(express.json());
 
-app.use('/api/auth', authRouter);
+app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/jobs', jobsRouter);
 app.use('/api/applications', applicationsRouter);
 

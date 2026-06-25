@@ -1,11 +1,11 @@
 # Job Board Platform
 
-A full-stack job board built with Angular-style component architecture, .NET-style API patterns, and SQL Server.
+A full-stack job board built with React, Express.js, and TypeScript.
 
 ## Tech Stack
 
-- **Frontend:** React + TypeScript + Vite (Angular-style component structure)
-- **Backend:** Express.js + TypeScript (.NET-style route/controller pattern)
+- **Frontend:** React + TypeScript + Vite
+- **Backend:** Express.js + TypeScript
 - **Auth:** JWT with bcrypt password hashing
 - **RBAC:** Employer and Candidate roles
 
