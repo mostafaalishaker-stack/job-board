@@ -5,6 +5,7 @@
   <meta name="description" content="Interactive demo of Job Board Platform featuring job search, filters, and application management. React + Express portfolio project.">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Job Board Demo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -86,9 +87,27 @@ nav { background: #131c31; border-bottom: 1px solid #1e293b; padding: 0 24px; he
 .toast { position: fixed; bottom: 24px; right: 24px; background: #22c55e; color: #fff; padding: 14px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; opacity: 0; transform: translateY(20px); transition: all .3s; z-index: 200; }
 .toast.show { opacity: 1; transform: translateY(0); }
 @media (max-width: 768px) { .demo-layout { grid-template-columns: 1fr; } }
+.skeleton { background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.skeleton-text { height: 14px; margin-bottom: 8px; width: 80%; }
+.skeleton-title { height: 20px; margin-bottom: 12px; width: 50%; }
+.skeleton-avatar { width: 40px; height: 40px; border-radius: 50%; }
+.empty-state { text-align: center; padding: 40px 20px; color: #64748b; }
+.empty-state i { font-size: 48px; margin-bottom: 16px; display: block; color: #334155; }
+.empty-state h3 { font-size: 18px; color: #94a3b8; margin-bottom: 8px; }
+.empty-state p { font-size: 14px; color: #64748b; }
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast { padding: 12px 20px; border-radius: 10px; font-size: 14px; display: flex; align-items: center; gap: 8px; animation: slideIn .3s ease; min-width: 280px; max-width: 400px; }
+.toast.success { background: #065f46; color: #6ee7b7; border: 1px solid rgba(110,231,183,.2); }
+.toast.error { background: #7f1d1d; color: #fca5a5; border: 1px solid rgba(252,165,165,.2); }
+.toast.info { background: #1e3a5f; color: #93c5fd; border: 1px solid rgba(147,197,253,.2); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.toast .close-btn { margin-left: auto; background: none; border: none; color: inherit; opacity: .5; cursor: pointer; font-size: 16px; padding: 0; }
 </style>
 </head>
 <body>
+
+<div class="toast-container" id="toast-container" aria-live="polite"></div>
 
 <a class="back-link" href="../index.html"><i class="fas fa-arrow-left"></i> Back to Portfolio</a>
 
@@ -96,9 +115,9 @@ nav { background: #131c31; border-bottom: 1px solid #1e293b; padding: 0 24px; he
   <div class="nav-left">
     <div class="logo">JobHub</div>
     <div class="nav-links">
-      <a href="#">Jobs</a>
-      <a href="#">Companies</a>
-      <a href="#">Post Job</a>
+      <a href="javascript:void(0)">Jobs</a>
+      <a href="javascript:void(0)">Companies</a>
+      <a href="javascript:void(0)">Post Job</a>
     </div>
   </div>
   <div class="nav-right">
@@ -158,8 +177,8 @@ nav { background: #131c31; border-bottom: 1px solid #1e293b; padding: 0 24px; he
 <script>
 const jobs = [
   { id:1, title:"Senior React Developer", company:"TechCo", location:"San Francisco", type:"Remote", salary:"$120-150K", posted:"2d ago", desc:"We are looking for an experienced React developer to lead our frontend team. You will build and maintain complex UI components, mentor junior developers, and drive best practices across the organization.", requirements:["5+ years React experience","Experience with TypeScript","Strong understanding of state management","Familiarity with CI/CD pipelines"], about:"TechCo is a leading technology company specializing in enterprise SaaS solutions. We serve over 10,000 customers worldwide and are growing rapidly." },
-  { id:2, title:"Full Stack Engineer", company:"StartupX", location:"New York", type:"On-site", salary:"$100-130K", posted:"3d ago", desc:"Join our lean engineering team to build features across the full stack. You'll work with Node.js, React, and PostgreSQL to deliver a best-in-class product experience.", requirements:["3+ years full stack development","Proficiency in React and Node.js","Experience with SQL databases","Ability to work in a fast-paced environment"], about:"StartupX is an early-stage startup disrupting the logistics industry with AI-powered route optimization." },
-  { id:3, title:"DevOps Engineer", company:"CloudInc", location:"Austin", type:"Hybrid", salary:"$130-160K", posted:"1w ago", desc:"Help us scale our cloud infrastructure and improve deployment reliability. You will design and maintain CI/CD pipelines, manage Kubernetes clusters, and ensure 99.9% uptime.", requirements:["Experience with AWS or GCP","Kubernetes and Docker expertise","Infrastructure as Code (Terraform)","Scripting with Python or Go"], about:"CloudInc provides cloud-native infrastructure solutions for enterprises undergoing digital transformation." },
+  { id:2, title:"Full Stack Engineer", company:"StartupX", location:"New York", type:"On-site", salary:"$100-130K", posted:"3d ago", desc:"Join our lean engineering team to build features across the full stack. You'll work with Node.js, React, and MongoDB to deliver a best-in-class product experience.", requirements:["3+ years full stack development","Proficiency in React and Node.js","Experience with SQL databases","Ability to work in a fast-paced environment"], about:"StartupX is an early-stage startup disrupting the logistics industry with AI-powered route optimization." },
+  { id:3, title:"DevOps Engineer", company:"CloudInc", location:"Austin", type:"Hybrid", salary:"$130-160K", posted:"1w ago", desc:"Help us scale our cloud infrastructure and improve deployment reliability. You will design and maintain CI/CD pipelines, manage Kubernetes clusters, and ensure 99.9% uptime.", requirements:["Experience with AWS or GCP","Kubernetes and Node.js expertise","Infrastructure as Code (Terraform)","Scripting with Python or Go"], about:"CloudInc provides cloud-native infrastructure solutions for enterprises undergoing digital transformation." },
   { id:4, title:"Frontend Developer", company:"DesignLab", location:"Remote", type:"Remote", salary:"$90-120K", posted:"5d ago", desc:"Create beautiful, accessible user interfaces for our design collaboration platform. You will work closely with designers to implement pixel-perfect UI components.", requirements:["Strong HTML, CSS, JavaScript skills","React or Vue experience","Eye for design and UX","Accessibility best practices"], about:"DesignLab is a collaborative design platform used by over 2 million designers worldwide." },
   { id:5, title:"Backend Engineer", company:"DataFlow", location:"Seattle", type:"On-site", salary:"$140-170K", posted:"2w ago", desc:"Build and optimize high-throughput data processing systems. You will design APIs, manage data pipelines, and ensure system reliability at scale.", requirements:["Strong backend development skills","Experience with distributed systems","Proficiency in Go or Java","Knowledge of message queues"], about:"DataFlow processes over 10TB of data daily for Fortune 500 companies." },
   { id:6, title:"Mobile Developer", company:"AppStudio", location:"Chicago", type:"Hybrid", salary:"$110-140K", posted:"1w ago", desc:"Develop cross-platform mobile applications used by millions. You will implement new features, optimize performance, and maintain our React Native codebase.", requirements:["React Native experience","iOS and Android deployment","Performance optimization","State management (Redux or MobX)"], about:"AppStudio creates award-winning mobile applications for consumer brands." }
@@ -168,6 +187,47 @@ const jobs = [
 let activeFilter = 'all';
 let searchQuery = '';
 let selectedJob = null;
+
+function showSkeleton(container, type) {
+  var html = '';
+  if (type === 'card') {
+    for (var i = 0; i < 3; i++) {
+      html += '<div class="skeleton" style="padding:16px;margin-bottom:12px"><div class="skeleton-title"></div><div class="skeleton-text"></div><div class="skeleton-text" style="width:60%"></div></div>';
+    }
+  } else if (type === 'list') {
+    for (var i = 0; i < 5; i++) {
+      html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 0"><div class="skeleton skeleton-avatar"></div><div style="flex:1"><div class="skeleton-title"></div><div class="skeleton-text" style="width:60%"></div></div></div>';
+    }
+  } else if (type === 'avatar') {
+    html = '<div style="display:flex;align-items:center;gap:12px"><div class="skeleton skeleton-avatar"></div><div style="flex:1"><div class="skeleton-text" style="width:40%"></div></div></div>';
+  } else {
+    html = '<div class="skeleton" style="padding:16px"><div class="skeleton-title"></div><div class="skeleton-text"></div><div class="skeleton-text" style="width:60%"></div></div>';
+  }
+  container.innerHTML = html;
+}
+
+function hideSkeleton(container) {
+  container.innerHTML = '';
+}
+
+function showEmptyState(container, icon, title, message) {
+  container.innerHTML = '<div class="empty-state"><i class="' + icon + '"></i><h3>' + title + '</h3><p>' + message + '</p></div>';
+}
+
+function showToast(message, type, duration) {
+  if (typeof type === 'boolean') type = type ? 'success' : 'error';
+  type = type || 'info';
+  duration = duration || 3000;
+  var container = document.getElementById('toast-container');
+  if (!container) return;
+  var toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.innerHTML = '<span>' + message + '</span><button class="close-btn" onclick="this.parentElement.remove()">&times;</button>';
+  container.appendChild(toast);
+  setTimeout(function() {
+    if (toast.parentElement) toast.remove();
+  }, duration);
+}
 
 function getBadgeClass(type) {
   switch(type) {
